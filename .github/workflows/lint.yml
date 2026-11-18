@@ -9,6 +9,7 @@ jobs:
   # BLOCKING: lints only the files changed in the pull request,
   # so existing code does not stop the team while it is cleaned up gradually.
   lint-changed-files:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
