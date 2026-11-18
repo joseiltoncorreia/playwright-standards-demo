@@ -1,0 +1,80 @@
+name: Automation code standards
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  # BLOCKING: lints only the files changed in the pull request,
+  # so existing code does not stop the team while it is cleaned up gradually.
+  lint-changed-files:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Get changed TypeScript files
+        id: changed
+        run: |
+          FILES=$(git diff --name-only --diff-filter=ACMR origin/${{ github.base_ref }}...HEAD -- '*.ts' | tr '\n' ' ')
+          echo "files=$FILES" >> "$GITHUB_OUTPUT"
+
+      - name: ESLint on changed files
+        if: steps.changed.outputs.files != ''
+        run: npx eslint --max-warnings=0 ${{ steps.changed.outputs.files }}
+
+      - name: Prettier check on changed files
+        if: steps.changed.outputs.files != ''
+        run: npx prettier --check ${{ steps.changed.outputs.files }}
+
+  # NON-BLOCKING: full-repository report to track progress over time.
+  full-report:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+      - run: mkdir -p reports
+
+      - name: ESLint report (all files)
+        run: npm run lint:report
+
+      - name: Duplication report
+        run: npm run duplication || true
+
+      - name: Summary by rule
+        run: |
+          node -e "
+            const fs = require('fs');
+            const data = JSON.parse(fs.readFileSync('reports/eslint-report.json', 'utf8'));
+            const counts = {};
+            let files = 0;
+            for (const f of data) {
+              if (f.messages.length) files++;
+              for (const m of f.messages) counts[m.ruleId || 'parse-error'] = (counts[m.ruleId || 'parse-error'] || 0) + 1;
+            }
+            const rows = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+            let md = '## Lint report\n\nFiles with issues: ' + files + ' of ' + data.length + '\n\n| Rule | Violations |\n|---|---|\n';
+            for (const [rule, n] of rows) md += '| ' + rule + ' | ' + n + ' |\n';
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, md);
+          "
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lint-and-duplication-reports
+          path: reports/

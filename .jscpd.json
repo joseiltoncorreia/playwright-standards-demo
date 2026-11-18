@@ -1,0 +1,15 @@
+{
+  "path": ["."],
+  "pattern": "**/*.ts",
+  "ignore": [
+    "**/node_modules/**",
+    "**/reports/**",
+    "**/playwright-report/**",
+    "**/test-results/**"
+  ],
+  "minLines": 6,
+  "minTokens": 50,
+  "reporters": ["console", "json"],
+  "output": "./reports",
+  "threshold": 100
+}

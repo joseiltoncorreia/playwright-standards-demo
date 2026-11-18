@@ -1,0 +1,26 @@
+{
+  "name": "swaglabs-playwright-standards",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "lint:report": "eslint . --format json --output-file reports/eslint-report.json || true",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "duplication": "jscpd --config .jscpd.json",
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@playwright/test": "^1.48.0",
+    "@types/node": "^22.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-playwright": "^2.0.0",
+    "jscpd": "^4.0.0",
+    "prettier": "^3.3.0",
+    "typescript": "^5.5.0",
+    "typescript-eslint": "^8.0.0"
+  }
+}
