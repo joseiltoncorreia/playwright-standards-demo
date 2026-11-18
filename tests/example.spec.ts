@@ -6,7 +6,6 @@ test.describe('Inventory', () => {
     const login = new LoginPage(page);
     await login.open();
     await login.login('standard_user', 'secret_sauce');
-    await page.waitForTimeout(3000);
 
     await expect(page.getByTestId('inventory-list')).toBeVisible();
   });
